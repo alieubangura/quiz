@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌍 Geo Quiz</title>
+  
+  <!-- Favicon (inline SVG for browser tab) -->
+  <link rel="icon" href="data:image/svg+xml,
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+    <circle cx='50' cy='50' r='45' fill='%23007BFF'/>
+    <path d='M50 5a45 45 0 1 0 0 90 45 45 0 1 0 0-90z' fill='%23fff' fill-opacity='0.2'/>
+    <path d='M35 30h30M35 50h30M35 70h30M50 20v60' stroke='%23fff' stroke-width='4'/>
+  </svg>" type="image/svg+xml">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="quiz-container show">
+    <h1>🌍 Geo Quiz</h1>
+
+    <!-- High Score Screen -->
+    <div id="highscore-screen" class="screen active">
+      <h2>High Score: <span id="highscore">0</span></h2>
+      <button id="start-btn">Start Quiz</button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="screen hidden">
+      <div id="timer">10</div>
+      <h2 id="question"></h2>
+      <div id="answers" class="answers"></div>
+      <button id="end-quiz-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="white" viewBox="0 0 24 24" style="margin-right:6px; vertical-align:middle;">
+          <path d="M12 2C6.477 2 2 6.478 2 12s4.477 10 10 10 10-4.478 10-10S17.523 2 12 2zm-4 5h8v10H8V7z"/>
+        </svg>
+        End Quiz
+      </button>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="screen hidden">
+      <h2>Quiz Over!</h2>
+      <p>Your Score: <span id="final-score">0</span></p>
+      <button id="play-again-btn">Play Again</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
