@@ -12,33 +12,74 @@ const highscoreScreen = document.getElementById("highscore-screen");
 let currentQuestionIndex = 0;
 let score = 0;
 let timer;
-let questions = [];
 let highscore = localStorage.getItem("highscore") || 0;
 
 highscoreDisplay.textContent = highscore;
 
-async function fetchQuestions() {
-  const url = "https://en.wikipedia.org/w/api.php?action=query&format=json&list=random&rnnamespace=0&rnlimit=50&generator=categorymembers&gcmtitle=Category:Geography&prop=extracts&exintro=true&explaintext=true";
-  const response = await fetch(url);
-  const data = await response.json();
-
-  const pages = data.query.pages;
-  questions = Object.values(pages).map(page => ({
-    question: `What is ${page.title}?`,
-    answer: page.extract.split(".")[0] + "."
-  }));
+// Shuffle function for randomizing question order
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
-function startQuiz() {
-  score = 0;
-  currentQuestionIndex = 0;
-  quizScreen.classList.remove("hidden");
-  highscoreScreen.classList.add("hidden");
-  resultScreen.classList.add("hidden");
-  startTimer();
-  showQuestion();
-}
+// 50 pre-made geography questions
+const questions = [
+  { question: "What is the capital of France?", answers: ["Paris","Rome","Madrid","Berlin"], correct: 0 },
+  { question: "Which continent is Egypt in?", answers: ["Asia","Africa","Europe","Australia"], correct: 1 },
+  { question: "What is the largest ocean?", answers: ["Atlantic","Indian","Pacific","Arctic"], correct: 2 },
+  { question: "Which country has the largest population?", answers: ["USA","India","China","Brazil"], correct: 2 },
+  { question: "What is the capital of Japan?", answers: ["Beijing","Seoul","Tokyo","Kyoto"], correct: 2 },
+  { question: "Which river runs through Egypt?", answers: ["Amazon","Nile","Yangtze","Danube"], correct: 1 },
+  { question: "What is the smallest country in the world?", answers: ["Monaco","Vatican City","Malta","Liechtenstein"], correct: 1 },
+  { question: "Which mountain is the tallest in the world?", answers: ["K2","Everest","Kilimanjaro","Makalu"], correct: 1 },
+  { question: "Which desert is the largest?", answers: ["Sahara","Gobi","Kalahari","Arctic"], correct: 0 },
+  { question: "What is the capital of Canada?", answers: ["Toronto","Ottawa","Vancouver","Montreal"], correct: 1 },
+  { question: "Which country is known as the Land of the Rising Sun?", answers: ["China","Japan","Thailand","South Korea"], correct: 1 },
+  { question: "Which US state is the largest by area?", answers: ["Texas","Alaska","California","Montana"], correct: 1 },
+  { question: "Which country has the longest coastline?", answers: ["USA","Russia","Australia","Canada"], correct: 3 },
+  { question: "What is the capital of Australia?", answers: ["Sydney","Melbourne","Canberra","Perth"], correct: 2 },
+  { question: "Which continent is Greenland part of?", answers: ["Europe","North America","Asia","Arctic"], correct: 1 },
+  { question: "Which is the longest river in the world?", answers: ["Nile","Amazon","Yangtze","Mississippi"], correct: 1 },
+  { question: "What is the capital of Germany?", answers: ["Munich","Berlin","Hamburg","Frankfurt"], correct: 1 },
+  { question: "Which sea is the saltiest?", answers: ["Dead Sea","Red Sea","Black Sea","Caspian Sea"], correct: 0 },
+  { question: "What is the capital of Italy?", answers: ["Rome","Venice","Milan","Florence"], correct: 0 },
+  { question: "Which country is shaped like a boot?", answers: ["Spain","Italy","Portugal","Greece"], correct: 1 },
+  { question: "What is the capital of Russia?", answers: ["Moscow","Saint Petersburg","Kazan","Sochi"], correct: 0 },
+  { question: "Which African country is famous for pyramids?", answers: ["Nigeria","Egypt","Sudan","Morocco"], correct: 1 },
+  { question: "What is the capital of Kenya?", answers: ["Mombasa","Nairobi","Kisumu","Lamu"], correct: 1 },
+  { question: "Which country is home to the Amazon rainforest?", answers: ["Peru","Brazil","Colombia","Ecuador"], correct: 1 },
+  { question: "What is the currency of Japan?", answers: ["Yuan","Won","Yen","Ringgit"], correct: 2 },
+  { question: "Which country is both in Europe and Asia?", answers: ["Greece","Russia","Turkey","Cyprus"], correct: 2 },
+  { question: "What is the capital of South Korea?", answers: ["Busan","Seoul","Incheon","Daegu"], correct: 1 },
+  { question: "Which city is known as the Big Apple?", answers: ["Los Angeles","Chicago","New York City","Miami"], correct: 2 },
+  { question: "What is the capital of Argentina?", answers: ["Santiago","Buenos Aires","Lima","Montevideo"], correct: 1 },
+  { question: "Which is the largest country by land area?", answers: ["USA","Canada","China","Russia"], correct: 3 },
+  { question: "What is the capital of Nigeria?", answers: ["Lagos","Abuja","Kano","Ibadan"], correct: 1 },
+  { question: "Which desert covers much of Mongolia?", answers: ["Sahara","Gobi","Kalahari","Patagonian"], correct: 1 },
+  { question: "Which is the largest island in the world?", answers: ["Greenland","New Guinea","Borneo","Madagascar"], correct: 0 },
+  { question: "Which country is famous for tulips?", answers: ["Belgium","Netherlands","France","Denmark"], correct: 1 },
+  { question: "What is the capital of Spain?", answers: ["Barcelona","Madrid","Seville","Valencia"], correct: 1 },
+  { question: "Which sea separates Europe and Africa?", answers: ["Red Sea","Mediterranean Sea","Black Sea","Baltic Sea"], correct: 1 },
+  { question: "What is the highest waterfall in the world?", answers: ["Niagara Falls","Angel Falls","Victoria Falls","Yosemite Falls"], correct: 1 },
+  { question: "Which country has the Great Barrier Reef?", answers: ["Australia","Philippines","Indonesia","Fiji"], correct: 0 },
+  { question: "What is the capital of Thailand?", answers: ["Bangkok","Phuket","Chiang Mai","Pattaya"], correct: 0 },
+  { question: "Which country is home to Mount Fuji?", answers: ["China","Japan","South Korea","Taiwan"], correct: 1 },
+  { question: "What is the capital of Mexico?", answers: ["Cancun","Monterrey","Mexico City","Guadalajara"], correct: 2 },
+  { question: "Which ocean is the warmest?", answers: ["Atlantic","Pacific","Indian","Arctic"], correct: 2 },
+  { question: "What is the capital of Greece?", answers: ["Athens","Thessaloniki","Sparta","Rhodes"], correct: 0 },
+  { question: "Which country is known for the Eiffel Tower?", answers: ["Italy","France","Belgium","Spain"], correct: 1 },
+  { question: "What is the capital of Turkey?", answers: ["Istanbul","Ankara","Izmir","Bursa"], correct: 1 },
+  { question: "Which river runs through Paris?", answers: ["Thames","Danube","Seine","Rhine"], correct: 2 },
+  { question: "Which country is famous for the Taj Mahal?", answers: ["Pakistan","India","Bangladesh","Nepal"], correct: 1 },
+  { question: "What is the capital of Portugal?", answers: ["Lisbon","Porto","Braga","Coimbra"], correct: 0 },
+  { question: "Which continent has the most countries?", answers: ["Asia","Africa","Europe","South America"], correct: 1 },
+  { question: "What is the capital of Egypt?", answers: ["Alexandria","Giza","Cairo","Luxor"], correct: 2 }
+];
 
+// Timer and quiz functions
 function startTimer() {
   let timeLeft = 10;
   timerDisplay.textContent = timeLeft;
@@ -47,69 +88,72 @@ function startTimer() {
     timerDisplay.textContent = timeLeft;
     if (timeLeft <= 0) {
       clearInterval(timer);
-      endQuiz();
+      nextQuestion();
     }
   }, 1000);
 }
 
 function showQuestion() {
-  if (currentQuestionIndex >= questions.length) {
-    endQuiz();
-    return;
-  }
-
-  const currentQuestion = questions[currentQuestionIndex];
-  questionDisplay.textContent = currentQuestion.question;
-
-  const correctAnswer = currentQuestion.answer;
-  const wrongAnswers = questions
-    .filter((_, index) => index !== currentQuestionIndex)
-    .map(q => q.answer)
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 3);
-
-  const allAnswers = [correctAnswer, ...wrongAnswers].sort(() => Math.random() - 0.5);
-
+  const q = questions[currentQuestionIndex];
+  questionDisplay.textContent = q.question;
   answersDisplay.innerHTML = "";
-  allAnswers.forEach(answer => {
-    const answerBtn = document.createElement("button");
-    answerBtn.textContent = answer;
-    answerBtn.classList.add("answer-btn");
-    answerBtn.onclick = () => handleAnswer(answer, correctAnswer);
-    answersDisplay.appendChild(answerBtn);
+  q.answers.forEach((ans, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = ans;
+    btn.addEventListener("click", () => selectAnswer(i));
+    answersDisplay.appendChild(btn);
   });
+  startTimer();
 }
 
-function handleAnswer(selectedAnswer, correctAnswer) {
-  if (selectedAnswer === correctAnswer) {
-    score++;
-  }
+function selectAnswer(index) {
+  clearInterval(timer);
+  const q = questions[currentQuestionIndex];
+  const buttons = answersDisplay.querySelectorAll("button");
+  buttons.forEach((btn, i) => {
+    if (i === q.correct) btn.classList.add("correct");
+    else if (i === index) btn.classList.add("incorrect");
+    btn.disabled = true;
+  });
+  if (index === q.correct) score++;
+  setTimeout(nextQuestion, 1000);
+}
+
+function nextQuestion() {
   currentQuestionIndex++;
-  showQuestion();
+  if (currentQuestionIndex < questions.length) showQuestion();
+  else endQuiz();
 }
 
 function endQuiz() {
   clearInterval(timer);
   quizScreen.classList.add("hidden");
   resultScreen.classList.remove("hidden");
-  const finalScore = Math.min(score, 50);
-  document.getElementById("final-score").textContent = finalScore;
-
-  if (finalScore > highscore) {
-    highscore = finalScore;
+  document.getElementById("final-score").textContent = score;
+  if (score > highscore) {
+    highscore = score;
     localStorage.setItem("highscore", highscore);
     highscoreDisplay.textContent = highscore;
   }
 }
 
-function playAgain() {
-  fetchQuestions().then(startQuiz);
-}
-
+// Start button: shuffle questions and start quiz
 startBtn.addEventListener("click", () => {
-  fetchQuestions().then(startQuiz);
+  score = 0;
+  currentQuestionIndex = 0;
+  quizScreen.classList.remove("hidden");
+  highscoreScreen.classList.add("hidden");
+  resultScreen.classList.add("hidden");
+  
+  // Shuffle questions for random order
+  shuffleArray(questions);
+  
+  showQuestion();
 });
 
 endQuizBtn.addEventListener("click", endQuiz);
-playAgainBtn.addEventListener("click", playAgain);
 
+playAgainBtn.addEventListener("click", () => {
+  resultScreen.classList.add("hidden");
+  highscoreScreen.classList.remove("hidden");
+});
