@@ -112,3 +112,4 @@ startBtn.addEventListener("click", () => {
 
 endQuizBtn.addEventListener("click", endQuiz);
 playAgainBtn.addEventListener("click", playAgain);
+
